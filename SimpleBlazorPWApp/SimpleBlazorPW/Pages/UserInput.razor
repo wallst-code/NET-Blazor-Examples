@@ -1,0 +1,94 @@
+﻿@page "/userinput"
+@using SimpleEncryptionLibrary.Models
+@using SimpleEncryptionLibrary.Services
+@using SimpleBlazorPW.Models
+@using System.Text
+
+
+<h3>User Input</h3>
+
+<div class="row">
+    <div class="col-md-2">
+        <EditForm Model="@password" OnValidSubmit="HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <div class="form-group">
+                <label>Seed Phrase</label>
+                <InputText @bind-Value="password.SeedPhrase" class="form-control"></InputText>
+            </div>
+            <br />
+            <div class="form-group">
+                <label>Key Phrase</label>
+                <InputText @bind-Value="password.KeyPhrase" class="form-control"></InputText>
+            </div>
+            <br />
+            <div class="form-group">
+                <label>PIN</label>
+                <InputNumber @bind-Value="password.Pin" class="form-control"></InputNumber>
+                <p>*Cannot start with zero.</p>
+            </div>
+            <br />
+            <div class="form-group">
+                <label>Site Name</label>
+                <InputText @bind-Value="password.SiteName" class="form-control"></InputText>
+            </div>
+            <br />
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </EditForm>
+    </div>
+</div>
+<br />
+<br />
+<br />
+<div class="mb-6">
+    <label>Full Password: </label>
+    <h3>@_encryptedPassword</h3>
+    <br />
+    <input type="number" @bind-value="passwordLength" /><button type="submit" @onclick="GetTruncatedPassword">Shorten Password</button>
+    <br />
+    <br />
+    <label>Shortened Password: </label>
+    <h3>@truncatedPassword</h3>
+    <p class="text-info">*Minimum length is 12 characters.</p>
+</div>
+
+
+
+@code {
+    private DisplayPasswordModel password = new DisplayPasswordModel();
+    private string _encryptedPassword;
+    private int passwordLength = 40;
+    private string truncatedPassword;
+    private int minPasswordLength = 12;
+    string passwordWarning = $"Minimum password length is 12 characters.";
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+    }
+
+    private void HandleValidSubmit()
+    {
+        password.SiteName = password.SiteName.ToUpper();
+
+        ISha256Hasher hash = new Sha256Hasher(password);
+        IEncryptionServicev2 encrypt = new EncryptionServicev2(password, hash);
+
+        _encryptedPassword = encrypt.GetFinalPassword();
+    }
+
+    private void GetTruncatedPassword()
+    {
+        int minPaswordLength = passwordLength >= 12 ? passwordLength : passwordLength = 12;
+        truncatedPassword = _encryptedPassword.Substring(0, passwordLength);
+    }
+
+    // Was trying to add a character counter for the inputs with maybe a bar or a change in color with a counter.
+    // move to code behind
+    // https://getbootstrap.com/docs/5.2/forms/validation/#server-side
+    // add auth and roles
+    // control views with authorized decorators.
+    // control nav with auth as well.
+    // make production ready.
+
+}
